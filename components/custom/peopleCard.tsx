@@ -104,7 +104,7 @@ import { infoData } from "./people";
 
 export function UserPanle({ userInfo }) {
   return (
-    <div className={`${styles.card} flex items-center`}>
+    <div className={`flex items-center`}>
       <div>
         {/* 该写法是错误的 在next.js中 public是一个特殊目录 可以直接通过 ‘/’ 引入*/}
         {/* <img src="./../../public/imgs/happy.jpg" alt="" /> */}
