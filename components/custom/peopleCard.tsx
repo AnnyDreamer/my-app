@@ -3,6 +3,7 @@
 import * as React from "react";
 import { getImageUrl } from "../../lib/utils";
 import { useState } from "react";
+import styles from "@/styles/contact.module.css";
 
 // 使用map创建元素时 需要给每一个元素制定一个唯一的key 用来标识该元素，如果用户没有指定，则默认使用数据的index索引
 // key使得react在进行增删改时 能够匹配到具体元素 及在state变动时 更高效率的更新dom
@@ -99,50 +100,23 @@ function InfoList({ options }) {
   );
 }
 
-import { sculptureList, infoData } from "./people";
-import { Button } from "../ui/button";
-import { useImmer } from "use-immer";
+import { infoData } from "./people";
 
-export function IntroInfo() {
-  const [index, setIndex] = useState(0);
-  const [showMore, setShowMore] = useState(false);
-
-  function handleNextClick({ action }) {
-    if (index === sculptureList.length - 1 && action === "next") {
-      setIndex(0);
-    } else if (index === 0 && action == "prev") {
-      setIndex(sculptureList.length - 1);
-    } else {
-      setIndex(action === "next" ? index + 1 : index - 1);
-    }
-  }
-
-  function handleMoreClick() {
-    setShowMore(!showMore);
-  }
-
-  const sculpture = sculptureList[index];
+export function UserPanle({ userInfo }) {
   return (
-    <>
-      <Button
-        onClick={() => handleNextClick({ action: "next" })}
-        className="mr-4"
-      >
-        Next
-      </Button>
-      <Button onClick={() => handleNextClick({ action: "prev" })}>Prev</Button>
-      <h2>
-        <i>{sculpture.name} </i>
-        by {sculpture.artist}
-      </h2>
-      <h3>
-        ({index + 1} of {sculptureList.length})
-      </h3>
-      <button onClick={handleMoreClick}>
-        {showMore ? "Hide" : "Show"} details
-      </button>
-      {showMore && <p>{sculpture.description}</p>}
-      <img src={sculpture.url} alt={sculpture.alt} />
-    </>
+    <div className={`${styles.card} flex items-center`}>
+      <div>
+        {/* 该写法是错误的 在next.js中 public是一个特殊目录 可以直接通过 ‘/’ 引入*/}
+        {/* <img src="./../../public/imgs/happy.jpg" alt="" /> */}
+        <img src="/imgs/happy.jpg" className="w-[75px] rounded-full" />
+      </div>
+      <div className="ml-4 text-center">
+        <h1>
+          <b>{userInfo.name}</b>
+        </h1>
+        <p>{userInfo.id}</p>
+        <p>{userInfo.describe}</p>
+      </div>
+    </div>
   );
 }

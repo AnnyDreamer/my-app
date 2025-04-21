@@ -4,6 +4,7 @@ import archiver from "archiver";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
+console.log(__filename, "##");
 const __dirname = path.dirname(__filename);
 
 // 配置类型定义
@@ -12,7 +13,6 @@ interface Config {
   outputPath: string;
   zipFileName: string;
 }
-
 // 默认配置
 const defaultConfig: Config = {
   sourceDir: path.join(__dirname, "dist"), // 要打包的目录

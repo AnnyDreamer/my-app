@@ -1,64 +1,39 @@
 "use client";
-import { useState } from "react";
+import * as React from "react";
+import { useState, createContext, useContext } from "react";
+import { Input } from "@/components/ui/input";
+import styles from "@/styles/contact.module.css";
+import { UserPanle } from "./peopleCard";
+import Link from "next/link";
+import { ThemeToggle } from "../ThemeToggle";
 
-const dataInfo = [
-  { label: "名字", key: "name" },
-  { label: "姓氏", key: "lastName" },
-];
-
-export function StateStudy() {
-  const [reverse, setReverse] = useState(false);
-  const resultList = reverse ? [...dataInfo].reverse() : dataInfo;
-  const checkbox = (
-    <label>
-      <input
-        type="checkbox"
-        checked={reverse}
-        onChange={(e) => setReverse(e.target.checked)}
-      />
-      调换顺序
-    </label>
-  );
-  return (
-    <div className="flex flex-col gap-y-2 mt-2">
-      {resultList.map((item) => {
-        // 使用 key 来标识组件 当顺序改变时 指定一个不同的 key 来重置它的 state
-        return <Field label={item.label} key={item.key} />;
-      })}
-      {checkbox}
-    </div>
-  );
-}
-
-function Field({ label }) {
-  const [text, setText] = useState("");
-  return (
-    <label>
-      {label}：
-      <input
-        type="text"
-        value={text}
-        placeholder={label}
-        onChange={(e) => setText(e.target.value)}
-      />
-    </label>
-  );
-}
+const userContext = createContext({ name: "hi~", id: "1", describe: "hahha" });
 
 // 复杂组件
-function ContactList({ contacts, selectedId, onSelect }) {
+interface Contact {
+  id: number;
+  name: string;
+}
+
+interface ContactListProps {
+  contacts: Contact[];
+  selectedId: number;
+  onSelect: (id: number) => void;
+}
+
+function ContactList({ contacts, selectedId, onSelect }: ContactListProps) {
   return (
     <section>
-      <ul className="flex gap-x-4 mt-4">
+      <ul className="flex flex-col gap-x-4">
         {contacts.map((contact) => (
           <li key={contact.id}>
-            <button
-              onClick={() => {
-                onSelect(contact.id);
-              }}
+            <Link
+              href={`/contacts/${contact.id}`}
+              onClick={() => onSelect(contact.id)}
+              className="block w-full text-left hover:bg-gray-100 p-2 rounded"
             >
               {contact.id === selectedId ? <b>{contact.name}</b> : contact.name}
-            </button>
+            </Link>
           </li>
         ))}
       </ul>
@@ -66,48 +41,24 @@ function ContactList({ contacts, selectedId, onSelect }) {
   );
 }
 
-function EditContact({ initialData, onSave }) {
+function EditContact({ initialData }) {
   const [name, setName] = useState(initialData.name);
   const [email, setEmail] = useState(initialData.email);
   return (
-    <section className="flex flex-col gap-y-2 mt-2 items-start">
-      <label>
-        名称：
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-      </label>
-      <label>
-        邮箱：
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-      </label>
-      <button
-        onClick={() => {
-          const updatedData = {
-            id: initialData.id,
-            name: name,
-            email: email,
-          };
-          onSave(updatedData);
-        }}
-      >
-        保存
-      </button>
-      <button
-        onClick={() => {
-          setName(initialData.name);
-          setEmail(initialData.email);
-        }}
-      >
-        重置
-      </button>
-    </section>
+    <div className="flex flex-col gap-y-2 mt-2 items-start">
+      <label>名称：</label>
+      <Input
+        type="text"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
+      <label>邮箱：</label>
+      <Input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+    </div>
   );
 }
 
@@ -123,38 +74,21 @@ const initialContacts: initialContactsType[] = [
   { id: 2, name: "Bob", email: "bob@mail.com" },
 ];
 
-export function ContactManager() {
+export function AddContact() {
+  const userInfo = useContext(userContext);
   const [contacts, setContacts] = useState(initialContacts);
   const [selectedId, setSelectedId] = useState(0);
-  const selectedContact = contacts.find((c) => c.id === selectedId);
-
-  function handleSave(updatedData: initialContactsType) {
-    const nextContacts = contacts.map((c) => {
-      if (c.id === updatedData.id) {
-        return updatedData;
-      } else {
-        return c;
-      }
-    });
-    setContacts(nextContacts);
-  }
-
-
-
-
   return (
-    <div>
-      <ContactList
-        contacts={contacts}
-        selectedId={selectedId}
-        onSelect={(id) => setSelectedId(id)}
-      />
-      <hr />
-      <EditContact
-        initialData={selectedContact}
-        onSave={handleSave}
-        key={selectedContact?.id}
-      />
+    <div className="min-h-screen bg-white dark:bg-gray-900 text-black dark:text-white">
+      <ThemeToggle />
+      <UserPanle userInfo={userInfo} />
+      <div className={`${styles.card} mt-2`}>
+        <ContactList
+          contacts={contacts}
+          selectedId={selectedId}
+          onSelect={(id) => setSelectedId(id)}
+        />
+      </div>
     </div>
   );
 }

@@ -1,4 +1,6 @@
 {
   "commentTranslate.hover.enabled": false,
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "thiefBook.filePath": "/Users/yao/Documents/其他/毛泽东选集第1-5卷.txt",
+  "thiefBook.isEnglish": true
 }
