@@ -10,9 +10,16 @@ export default function Home() {
   });
   return (
     <div className="w-full">
-      <div className="w-full mt-4 px-6 ">
-        <div className="font-bold dark:text-white">概览</div>
-        <div className="text-sm text-gray-500">{currentDate}</div>
+      <div className="w-full mt-4 px-3">
+        <div className="font-bold dark:text-white flex items-center gap-1">
+          <span className="inline-block w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+          <span>概览</span>
+        </div>
+        <div className="text-sm text-gray-500 px-2">{currentDate}</div>
+        <div className="font-bold dark:text-white flex items-center gap-1 mt-2">
+          <span className="inline-block w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+          <span>本月事项</span>
+        </div>
       </div>
       <div className="border border-gray-200 m-4 rounded-lg">
         <DateTable />

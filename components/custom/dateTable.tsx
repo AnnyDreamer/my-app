@@ -1,7 +1,7 @@
 "use client";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -54,6 +54,9 @@ interface DayButtonProps {
   isOutside?: boolean;
   onSelect?: (date: Date) => void;
   events: Event[];
+  onAddEvent?: (date: Date) => void;
+  onViewEvents?: (date: Date, events: Event[]) => void;
+  onDeleteEvent?: (eventId: number) => void;
 }
 
 function DayButton({
@@ -62,6 +65,9 @@ function DayButton({
   isOutside,
   onSelect,
   events,
+  onAddEvent,
+  onViewEvents,
+  onDeleteEvent,
 }: DayButtonProps) {
   const isToday =
     format(new Date(), "yyyy-MM-dd") === format(date, "yyyy-MM-dd");
@@ -78,8 +84,7 @@ function DayButton({
       });
       setIsAddDialogOpen(false);
       setNewEvent({ title: "", description: "" });
-      // 刷新事件列表
-      window.location.reload();
+      onAddEvent?.(date);
     } catch (error) {
       console.error("Failed to add event:", error);
     }
@@ -87,13 +92,13 @@ function DayButton({
 
   const handleViewDetails = () => {
     setIsViewDialogOpen(true);
+    onViewEvents?.(date, events);
   };
 
   const handleDeleteEvent = async (eventId: number) => {
     try {
       await api.deleteEvent(eventId);
-      // 刷新事件列表
-      window.location.reload();
+      onDeleteEvent?.(eventId);
     } catch (error) {
       console.error("Failed to delete event:", error);
     }
@@ -122,7 +127,7 @@ function DayButton({
               {format(date, "d")}
             </time>
             {dayEvents.length > 0 && (
-              <span className="absolute bottom-1 right-1 text-xs text-primary">
+              <span className="absolute bottom-1 right-1 text-xs text-blue-500 font-bold">
                 {dayEvents.length}
               </span>
             )}
@@ -173,7 +178,7 @@ function DayButton({
               <Input
                 id="title"
                 value={newEvent.title}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setNewEvent({ ...newEvent, title: e.target.value })
                 }
               />
@@ -183,7 +188,7 @@ function DayButton({
               <Textarea
                 id="description"
                 value={newEvent.description}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                   setNewEvent({ ...newEvent, description: e.target.value })
                 }
               />
@@ -221,11 +226,24 @@ function DayButton({
   );
 }
 
-export function DateTable() {
-  const [selected, setSelected] = useState<Date>();
-  const [events, setEvents] = useState<Event[]>([]);
+export interface DateTableProps {
+  children?: React.ReactNode;
+  onDateSelect?: (date: Date) => void;
+  onEventAdd?: (date: Date) => void;
+  onEventView?: (date: Date, events: Event[]) => void;
+  onEventDelete?: (eventId: number) => void;
+}
 
-  useEffect(() => {
+export interface DateTableRef {
+  setSelectedDate: (date: Date) => void;
+  refreshEvents: () => Promise<void>;
+}
+
+export const DateTable = forwardRef<DateTableRef, DateTableProps>(
+  ({ children, onDateSelect, onEventAdd, onEventView, onEventDelete }, ref) => {
+    const [selected, setSelected] = useState<Date>(new Date());
+    const [events, setEvents] = useState<Event[]>([]);
+
     const fetchEvents = async () => {
       try {
         const allEvents = await api.getAllEvents();
@@ -235,33 +253,60 @@ export function DateTable() {
       }
     };
 
-    fetchEvents();
-  }, []);
+    useEffect(() => {
+      fetchEvents();
+    }, []);
 
-  return (
-    <div className="w-full h-full">
-      <Calendar
-        mode="single"
-        selected={selected}
-        onSelect={setSelected}
-        classNames={customClassNames}
-        components={{
-          Day: ({ date, displayMonth }) => (
-            <DayButton
-              date={date}
-              selected={
-                selected
-                  ? format(selected, "yyyy-MM-dd") ===
-                    format(date, "yyyy-MM-dd")
-                  : false
-              }
-              isOutside={date.getMonth() !== displayMonth.getMonth()}
-              onSelect={setSelected}
-              events={events}
-            />
-          ),
-        }}
-      />
-    </div>
-  );
-}
+    useImperativeHandle(ref, () => ({
+      setSelectedDate: (date: Date) => {
+        setSelected(date);
+      },
+      refreshEvents: fetchEvents,
+    }));
+
+    return (
+      <div className="w-full h-full">
+        <div className="flex justify-between items-center m-4 mb-0">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setSelected(new Date())}
+          >
+            回到今日
+          </Button>
+          {children}
+        </div>
+        <Calendar
+          mode="single"
+          selected={selected}
+          onSelect={(date) => {
+            setSelected(date);
+            onDateSelect?.(date!);
+          }}
+          classNames={customClassNames}
+          components={{
+            Day: ({ date, displayMonth }) => (
+              <DayButton
+                date={date}
+                selected={
+                  selected
+                    ? format(selected, "yyyy-MM-dd") ===
+                      format(date, "yyyy-MM-dd")
+                    : false
+                }
+                isOutside={date.getMonth() !== displayMonth.getMonth()}
+                onSelect={setSelected}
+                events={events}
+                onAddEvent={onEventAdd}
+                onViewEvents={onEventView}
+                onDeleteEvent={onEventDelete}
+              />
+            ),
+          }}
+        />
+      </div>
+    );
+  }
+);
+
+DateTable.displayName = "DateTable";
