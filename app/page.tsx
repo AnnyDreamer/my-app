@@ -1,20 +1,21 @@
-// import Link from "next/link";
-// import { Button } from "@/components/ui/button";
-// import { Gallery, IntroInfo } from "@/components/custom/peopleCard";
-import { AddContact } from "@/components/custom/statusCard";
-
+"use client";
+import { useState } from "react";
+import { DateTable } from "@/components/custom/dateTable";
 export default function Home() {
+  const [date, setDate] = useState(new Date());
+  const currentDate = date.toLocaleDateString("zh-CN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
   return (
-    <div className="p-4">
-      {/* <h1 className="text-x font-bold my-4">Hi,this is a next page</h1> */}
-      {/* <Button asChild>
-        <Link href="/blog">go yeyey</Link>
-      </Button>
-      <Button className="ml-4" variant="outline">
-        Button
-      </Button> */}
-      <div>
-        <AddContact />
+    <div className="w-full">
+      <div className="w-full mt-4 px-6 ">
+        <div className="font-bold dark:text-white">概览</div>
+        <div className="text-sm text-gray-500">{currentDate}</div>
+      </div>
+      <div className="border border-gray-200 m-4 rounded-lg">
+        <DateTable />
       </div>
     </div>
   );
