@@ -6,6 +6,7 @@ export interface Event {
   description?: string;
   date: string;
   created_at?: string;
+  isEdit?: boolean;
 }
 
 export const api = {

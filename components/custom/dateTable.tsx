@@ -1,7 +1,7 @@
 "use client";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import { useState, forwardRef, useImperativeHandle } from "react";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -34,7 +34,7 @@ const customClassNames = {
   head_cell:
     "text-muted-foreground rounded-md flex-1 font-normal text-[0.8rem]",
   row: "flex w-full mt-2",
-  cell: "relative flex-1 p-0 text-center text-sm focus-within:relative focus-within:z-20",
+  cell: "relative flex-1 mx-2 text-center text-sm focus-within:relative focus-within:z-20",
   day: "w-full p-0 font-normal hover:bg-accent rounded-md transition-colors",
   day_selected:
     "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
@@ -232,77 +232,60 @@ export interface DateTableProps {
   onEventAdd?: (date: Date) => void;
   onEventView?: (date: Date, events: Event[]) => void;
   onEventDelete?: (eventId: number) => void;
+  onMonthChange?: (date: Date) => void;
+  events?: Event[];
 }
 
 export interface DateTableRef {
   setSelectedDate: (date: Date) => void;
-  refreshEvents: () => Promise<void>;
   setCurrentMonth: (date: Date) => void;
 }
 
 export const DateTable = forwardRef<DateTableRef, DateTableProps>(
-  ({ children, onDateSelect, onEventAdd, onEventView, onEventDelete }, ref) => {
-    const [selected, setSelected] = useState<Date>();
-    const [events, setEvents] = useState<Event[]>([]);
+  (
+    {
+      children,
+      onDateSelect,
+      onEventAdd,
+      onEventView,
+      onEventDelete,
+      onMonthChange,
+      events = [],
+    },
+    ref
+  ) => {
+    const [selected, setSelected] = useState<Date>(new Date());
     const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
-
-    const fetchEvents = async () => {
-      try {
-        const allEvents = await api.getAllEvents();
-        setEvents(allEvents);
-      } catch (error) {
-        console.error("Failed to fetch events:", error);
-      }
-    };
-
-    const fetchEventsByMonth = async (date: Date) => {
-      try {
-        const yearMonth = format(date, "yyyy-MM");
-        const monthEvents = await api.getEventsByMonth(yearMonth);
-        setEvents(monthEvents);
-      } catch (error) {
-        console.error("Failed to fetch events for month:", error);
-      }
-    };
-
-    useEffect(() => {
-      fetchEventsByMonth(currentMonth);
-    }, [currentMonth]);
 
     useImperativeHandle(ref, () => ({
       setSelectedDate: (date: Date) => {
         setSelected(date);
       },
-      refreshEvents: fetchEvents,
       setCurrentMonth: (date: Date) => {
         setCurrentMonth(date);
       },
     }));
 
-    const handleGoToToday = () => {
-      const today = new Date();
-      setSelected(today);
-      setCurrentMonth(today);
-    };
-
     return (
       <div className="w-full h-full">
-        <div className="flex justify-between items-center m-4 mb-0">
-          <Button variant="outline" size="sm" onClick={handleGoToToday}>
+        <div className="flex justify-end items-center m-4 mb-0 gap-2">
+          {/* <Button
+            variant="outline"
+            size="sm"
+            onClick={handleGoToToday}
+            className="rounded-full"
+          >
             回到今日
-          </Button>
+          </Button> */}
           {children}
         </div>
         <Calendar
           mode="single"
           selected={selected}
           month={currentMonth}
-          onSelect={(date) => {
-            setSelected(date);
-            onDateSelect?.(date!);
-          }}
           onMonthChange={(date) => {
             setCurrentMonth(date);
+            onMonthChange?.(date);
           }}
           classNames={customClassNames}
           components={{
@@ -316,7 +299,10 @@ export const DateTable = forwardRef<DateTableRef, DateTableProps>(
                     : false
                 }
                 isOutside={date.getMonth() !== displayMonth.getMonth()}
-                onSelect={setSelected}
+                onSelect={(date) => {
+                  setSelected(date);
+                  onDateSelect?.(date);
+                }}
                 events={events}
                 onAddEvent={onEventAdd}
                 onViewEvents={onEventView}

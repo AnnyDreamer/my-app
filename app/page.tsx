@@ -1,54 +1,248 @@
 "use client";
-import { useEffect, useState } from "react";
-import { DateTable } from "@/components/custom/dateTable";
+import { useEffect, useState, useRef } from "react";
+import { DateTable, DateTableRef } from "@/components/custom/dateTable";
 import { api, Event } from "@/lib/api";
-import { format } from "date-fns";
+import { format, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Pencil, Plus } from "lucide-react";
+
 export default function Home() {
   const [date, setDate] = useState(new Date());
-  const currentDate = date.toLocaleDateString("zh-CN", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
   const [events, setEvents] = useState<Event[]>([]);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [editForm, setEditForm] = useState({ title: "", description: "" });
+  const dateTableRef = useRef<DateTableRef>(null);
+
+  // 获取当月事件
+  const fetchMonthEvents = async (date: Date) => {
+    try {
+      const monthEvents = await api.getEventsByMonth(format(date, "yyyy-MM"));
+      setEvents(monthEvents);
+    } catch (error) {
+      console.error("Failed to fetch month events:", error);
+    }
+  };
+
+  // 获取本周事件
+  const getWeekEvents = () => {
+    const start = startOfWeek(date, { weekStartsOn: 1 }); // 从周一开始
+    const end = endOfWeek(date, { weekStartsOn: 1 });
+    const weekDays = eachDayOfInterval({ start, end });
+
+    return weekDays.map((day) => {
+      const dayEvents = events.filter(
+        (event) => event.date === format(day, "yyyy-MM-dd")
+      );
+      return {
+        date: day,
+        events: dayEvents,
+      };
+    });
+  };
+
+  // 生成周计划
+  const generateWeeklyPlan = () => {
+    const weekEvents = getWeekEvents();
+    return weekEvents.map(({ date, events }) => ({
+      date: format(date, "yyyy-MM-dd"),
+      dayName: format(date, "EEEE"),
+      events,
+    }));
+  };
+
   useEffect(() => {
-    const fetchEvents = async () => {
-      const events = await api.getAllEvents();
-      if (events.length > 0) {
-        events.forEach((event) => {
-          console.log(event);
-          if (format(new Date(event.date), "MM") === format(date, "MM")) {
-            setEvents((prev) => [...prev, event]);
-          }
-        });
-      }
-    };
-    fetchEvents();
+    fetchMonthEvents(date);
   }, [date]);
+
+  const handleDateSelect = (selectedDate: Date) => {
+    setDate(selectedDate);
+  };
+
+  const handleMonthChange = (newDate: Date) => {
+    setDate(newDate);
+  };
+
+  const handleEventAdd = async (date: Date) => {
+    await fetchMonthEvents(date);
+  };
+
+  const handleEventView = (date: Date, dayEvents: Event[]) => {
+    console.log("Viewing events for date:", date, dayEvents);
+  };
+
+  const handleEventDelete = async (eventId: number) => {
+    try {
+      await api.deleteEvent(eventId);
+      await fetchMonthEvents(date);
+    } catch (error) {
+      console.error("Failed to delete event:", error);
+    }
+  };
+
+  const handleEdit = (event: Event) => {
+    setEditingEvent(event);
+    setEditForm({
+      title: event.title,
+      description: event.description || "",
+    });
+  };
+
+  const handleSave = async () => {
+    if (!editingEvent) return;
+    try {
+      const updatedEvent = await api.updateEvent(editingEvent.id!, {
+        ...editingEvent,
+        ...editForm,
+      });
+      setEvents((prev) =>
+        prev.map((event) =>
+          event.id === updatedEvent.id ? updatedEvent : event
+        )
+      );
+      setEditingEvent(null);
+      fetchMonthEvents(date);
+    } catch (error) {
+      console.error("Failed to update event:", error);
+    }
+  };
+
+  const handleCancel = () => {
+    setEditingEvent(null);
+  };
+
+  const weeklyPlan = generateWeeklyPlan();
+
+  const handleGoToToday = () => {
+    const today = new Date();
+    setDate(today);
+    dateTableRef.current?.setSelectedDate(today);
+    dateTableRef.current?.setCurrentMonth(today);
+  };
+
   return (
-    <div className="w-full">
-      <div className="w-full mt-4 px-3">
-        <div className="font-bold dark:text-white flex items-center gap-1">
-          <span className="inline-block w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
-          <span>概览</span>
+    <div className="w-full h-screen flex flex-col p-4 pt-0">
+      <div className="flex gap-4 min-h-0">
+        <div className="w-1/2 rounded-lg shadow-lg">
+          <DateTable
+            ref={dateTableRef}
+            onDateSelect={handleDateSelect}
+            onMonthChange={handleMonthChange}
+            onEventAdd={handleEventAdd}
+            onEventView={handleEventView}
+            onEventDelete={handleEventDelete}
+            events={events}
+          >
+            <Button variant="outline" size="sm" onClick={handleGoToToday}>
+              回到今日
+            </Button>
+          </DateTable>
         </div>
-        <div className="text-sm text-gray-500 px-2">{currentDate}</div>
-      </div>
-      <div className="border border-gray-200 m-4 rounded-lg">
-        <DateTable />
-      </div>
-      <div className="font-bold dark:text-white flex items-center gap-1 m-4">
-        <span className="inline-block w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
-        <span>本月事项</span>
-      </div>
-      <div>
-        {events.map((event) => (
-          <div key={event.id} className="px-4 flex items-center gap-2">
-            <span className="inline-block w-2 h-0.5 bg-blue-500 rounded-full"></span>
-            <span>{event.title}</span>
-            <span>{event.description}</span>
+        <div className="w-1/2 rounded-lg shadow-lg overflow-hidden">
+          <div className="h-full flex flex-col">
+            <div className="p-4 border-b">
+              <h2 className="text-lg font-medium">本周事项</h2>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              {weeklyPlan.map(({ date, dayName, events }) => (
+                <div key={date} className="mb-6 last:mb-0">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+                      {dayName} ({date})
+                    </h3>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-gray-500">
+                        {events.length} 个事项
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="rounded-full w-4 h-4"
+                      >
+                        <Plus />
+                      </Button>
+                    </div>
+                  </div>
+                  {events.length > 0 ? (
+                    <div className="space-y-2">
+                      {events.map((event) => (
+                        <div
+                          key={event.id}
+                          className="group relative bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors"
+                        >
+                          {editingEvent?.id === event.id ? (
+                            <div className="space-y-2">
+                              <Input
+                                value={editForm.title}
+                                onChange={(e) =>
+                                  setEditForm({
+                                    ...editForm,
+                                    title: e.target.value,
+                                  })
+                                }
+                                className="h-8"
+                              />
+                              <Textarea
+                                value={editForm.description}
+                                onChange={(e) =>
+                                  setEditForm({
+                                    ...editForm,
+                                    description: e.target.value,
+                                  })
+                                }
+                                className="h-20"
+                              />
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={handleCancel}
+                                >
+                                  取消
+                                </Button>
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  onClick={handleSave}
+                                >
+                                  保存
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="text-sm font-medium text-gray-900">
+                                {event.title}
+                              </div>
+                              {event.description && (
+                                <div className="text-xs text-gray-500  mt-1">
+                                  {event.description}
+                                </div>
+                              )}
+                              <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6"
+                                  onClick={() => handleEdit(event)}
+                                >
+                                  <Pencil className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-gray-400 italic">暂无安排</div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
-        ))}
+        </div>
       </div>
     </div>
   );
