@@ -237,12 +237,14 @@ export interface DateTableProps {
 export interface DateTableRef {
   setSelectedDate: (date: Date) => void;
   refreshEvents: () => Promise<void>;
+  setCurrentMonth: (date: Date) => void;
 }
 
 export const DateTable = forwardRef<DateTableRef, DateTableProps>(
   ({ children, onDateSelect, onEventAdd, onEventView, onEventDelete }, ref) => {
-    const [selected, setSelected] = useState<Date>(new Date());
+    const [selected, setSelected] = useState<Date>();
     const [events, setEvents] = useState<Event[]>([]);
+    const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
 
     const fetchEvents = async () => {
       try {
@@ -253,25 +255,40 @@ export const DateTable = forwardRef<DateTableRef, DateTableProps>(
       }
     };
 
+    const fetchEventsByMonth = async (date: Date) => {
+      try {
+        const yearMonth = format(date, "yyyy-MM");
+        const monthEvents = await api.getEventsByMonth(yearMonth);
+        setEvents(monthEvents);
+      } catch (error) {
+        console.error("Failed to fetch events for month:", error);
+      }
+    };
+
     useEffect(() => {
-      fetchEvents();
-    }, []);
+      fetchEventsByMonth(currentMonth);
+    }, [currentMonth]);
 
     useImperativeHandle(ref, () => ({
       setSelectedDate: (date: Date) => {
         setSelected(date);
       },
       refreshEvents: fetchEvents,
+      setCurrentMonth: (date: Date) => {
+        setCurrentMonth(date);
+      },
     }));
+
+    const handleGoToToday = () => {
+      const today = new Date();
+      setSelected(today);
+      setCurrentMonth(today);
+    };
 
     return (
       <div className="w-full h-full">
         <div className="flex justify-between items-center m-4 mb-0">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setSelected(new Date())}
-          >
+          <Button variant="outline" size="sm" onClick={handleGoToToday}>
             回到今日
           </Button>
           {children}
@@ -279,9 +296,13 @@ export const DateTable = forwardRef<DateTableRef, DateTableProps>(
         <Calendar
           mode="single"
           selected={selected}
+          month={currentMonth}
           onSelect={(date) => {
             setSelected(date);
             onDateSelect?.(date!);
+          }}
+          onMonthChange={(date) => {
+            setCurrentMonth(date);
           }}
           classNames={customClassNames}
           components={{

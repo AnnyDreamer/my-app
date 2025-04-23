@@ -18,6 +18,15 @@ export const api = {
     return response.json();
   },
 
+  // 获取特定月份的事件
+  getEventsByMonth: async (yearMonth: string): Promise<Event[]> => {
+    const response = await fetch(`${API_BASE_URL}/events/month/${yearMonth}`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch events for month");
+    }
+    return response.json();
+  },
+
   // 获取特定日期的事件
   getEventsByDate: async (date: string): Promise<Event[]> => {
     const response = await fetch(`${API_BASE_URL}/events/${date}`);

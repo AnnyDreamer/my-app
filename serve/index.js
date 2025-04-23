@@ -20,6 +20,32 @@ app.get("/api/events", (req, res) => {
   });
 });
 
+// 获取特定月份的事件
+app.get("/api/events/month/:yearMonth", (req, res) => {
+  const { yearMonth } = req.params;
+  // 验证日期格式 (YYYY-MM)
+  if (!/^\d{4}-\d{2}$/.test(yearMonth)) {
+    res.status(400).json({ error: "Invalid date format. Use YYYY-MM" });
+    return;
+  }
+
+  const [year, month] = yearMonth.split("-");
+  const startDate = `${year}-${month}-01`;
+  const endDate = `${year}-${month}-31`;
+
+  db.all(
+    "SELECT * FROM events WHERE date BETWEEN ? AND ? ORDER BY date DESC",
+    [startDate, endDate],
+    (err, rows) => {
+      if (err) {
+        res.status(500).json({ error: err.message });
+        return;
+      }
+      res.json(rows);
+    }
+  );
+});
+
 // 获取特定日期的事件
 app.get("/api/events/:date", (req, res) => {
   const { date } = req.params;
