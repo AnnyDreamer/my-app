@@ -7,12 +7,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Pencil, Plus } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function Home() {
   const [date, setDate] = useState(new Date());
   const [events, setEvents] = useState<Event[]>([]);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [editForm, setEditForm] = useState({ title: "", description: "" });
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [newEvent, setNewEvent] = useState({ title: "", description: "" });
   const dateTableRef = useRef<DateTableRef>(null);
 
   // 获取当月事件
@@ -75,7 +84,7 @@ export default function Home() {
   const handleEventDelete = async (eventId: number) => {
     try {
       await api.deleteEvent(eventId);
-      await fetchMonthEvents(date);
+      setEvents((prev) => prev.filter((event) => event.id !== eventId));
     } catch (error) {
       console.error("Failed to delete event:", error);
     }
@@ -91,11 +100,13 @@ export default function Home() {
 
   const handleSave = async () => {
     if (!editingEvent) return;
+
     try {
       const updatedEvent = await api.updateEvent(editingEvent.id!, {
         ...editingEvent,
         ...editForm,
       });
+
       setEvents((prev) =>
         prev.map((event) =>
           event.id === updatedEvent.id ? updatedEvent : event
@@ -110,6 +121,23 @@ export default function Home() {
 
   const handleCancel = () => {
     setEditingEvent(null);
+  };
+
+  const handleAddNewEvent = async () => {
+    if (!selectedDate || !newEvent.title) return;
+
+    try {
+      await api.addEvent({
+        title: newEvent.title,
+        description: newEvent.description,
+        date: selectedDate,
+      });
+      setIsAddDialogOpen(false);
+      setNewEvent({ title: "", description: "" });
+      fetchMonthEvents(date);
+    } catch (error) {
+      console.error("Failed to add event:", error);
+    }
   };
 
   const weeklyPlan = generateWeeklyPlan();
@@ -159,8 +187,12 @@ export default function Home() {
                         variant="ghost"
                         size="sm"
                         className="rounded-full w-4 h-4"
+                        onClick={() => {
+                          setSelectedDate(date);
+                          setIsAddDialogOpen(true);
+                        }}
                       >
-                        <Plus />
+                        <Plus className="h-3 w-3" />
                       </Button>
                     </div>
                   </div>
@@ -216,7 +248,7 @@ export default function Home() {
                                 {event.title}
                               </div>
                               {event.description && (
-                                <div className="text-xs text-gray-500  mt-1">
+                                <div className="text-xs text-gray-500 mt-1">
                                   {event.description}
                                 </div>
                               )}
@@ -244,6 +276,47 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* 添加事项对话框 */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>添加事项</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Input
+                placeholder="标题"
+                value={newEvent.title}
+                onChange={(e) =>
+                  setNewEvent({ ...newEvent, title: e.target.value })
+                }
+              />
+            </div>
+            <div>
+              <Textarea
+                placeholder="描述"
+                value={newEvent.description}
+                onChange={(e) =>
+                  setNewEvent({ ...newEvent, description: e.target.value })
+                }
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setIsAddDialogOpen(false);
+                  setNewEvent({ title: "", description: "" });
+                }}
+              >
+                取消
+              </Button>
+              <Button onClick={handleAddNewEvent}>添加</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

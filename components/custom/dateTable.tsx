@@ -95,13 +95,8 @@ function DayButton({
     onViewEvents?.(date, events);
   };
 
-  const handleDeleteEvent = async (eventId: number) => {
-    try {
-      await api.deleteEvent(eventId);
-      onDeleteEvent?.(eventId);
-    } catch (error) {
-      console.error("Failed to delete event:", error);
-    }
+  const handleDeleteEvent = (eventId: number) => {
+    onDeleteEvent?.(eventId);
   };
 
   const dayEvents = events.filter(
@@ -152,7 +147,11 @@ function DayButton({
               {dayEvents.map((event) => (
                 <ContextMenuItem
                   key={event.id}
-                  onClick={() => handleDeleteEvent(event.id!)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleDeleteEvent(event.id!);
+                  }}
                   asChild
                 >
                   <Button variant="ghost" size="sm" className="w-full">

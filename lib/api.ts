@@ -54,6 +54,7 @@ export const api = {
 
   // 删除事件
   deleteEvent: async (id: number): Promise<void> => {
+    console.log("Deleting event:", id);
     const response = await fetch(`${API_BASE_URL}/events/${id}`, {
       method: "DELETE",
     });
