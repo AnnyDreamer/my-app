@@ -1,9 +1,12 @@
 import React from "react";
-import { ThreeBodySystem } from "@/components/three/ThreeBodySystem";
+import { Questionnaire } from "../components/Questionnaire";
+
 function Docs() {
   return (
-    <div className="w-full h-screen flex flex-col p-4 pt-0">
-      {/* <ThreeBodySystem /> */}
+    <div className="w-full min-h-screen flex px-4">
+      <div className="w-2/3  border rounded-lg">
+        <Questionnaire />
+      </div>
     </div>
   );
 }

@@ -1,0 +1,171 @@
+[
+  {
+    "id": "q1",
+    "question": "您精力充沛吗？",
+    "relatedConstitutions": ["平和质"]
+  },
+  {
+    "id": "q2",
+    "question": "您容易疲乏吗？",
+    "relatedConstitutions": ["气虚质"]
+  },
+  {
+    "id": "q3",
+    "question": "您说话声音低弱无力吗？",
+    "relatedConstitutions": ["气虚质"]
+  },
+  {
+    "id": "q4",
+    "question": "您感到闷闷不乐、情绪低沉吗？",
+    "relatedConstitutions": ["气郁质"]
+  },
+  {
+    "id": "q5",
+    "question": "您比一般人耐受不了寒冷（冬天手脚易发凉）吗？",
+    "relatedConstitutions": ["阳虚质"]
+  },
+  {
+    "id": "q6",
+    "question": "您能适应外界自然和社会环境的变化吗？",
+    "relatedConstitutions": ["平和质"]
+  },
+  {
+    "id": "q7",
+    "question": "您容易失眠吗？",
+    "relatedConstitutions": ["阴虚质", "气郁质"]
+  },
+  {
+    "id": "q8",
+    "question": "您容易忘事（健忘）吗？",
+    "relatedConstitutions": ["气虚质", "阴虚质"]
+  },
+  {
+    "id": "q9",
+    "question": "您容易感到害怕或受到惊吓吗？",
+    "relatedConstitutions": ["特禀质", "气虚质"]
+  },
+  {
+    "id": "q10",
+    "question": "您皮肤容易起荨麻疹吗？",
+    "relatedConstitutions": ["特禀质"]
+  },
+  [
+    {
+      "id": "q11",
+      "question": "您容易过敏（对药物、食物、气味、花粉或季节变化等）吗？",
+      "relatedConstitutions": ["特禀质"]
+    },
+    {
+      "id": "q12",
+      "question": "您的皮肤一抓就红，并有抓痕吗？",
+      "relatedConstitutions": ["血瘀质"]
+    },
+    {
+      "id": "q13",
+      "question": "您的手脚心发热吗？",
+      "relatedConstitutions": ["阴虚质"]
+    },
+    {
+      "id": "q14",
+      "question": "您容易出虚汗吗？",
+      "relatedConstitutions": ["气虚质", "阴虚质"]
+    },
+    {
+      "id": "q15",
+      "question": "您喜欢安静，不喜欢说话吗？",
+      "relatedConstitutions": ["气郁质", "阳虚质"]
+    },
+    {
+      "id": "q16",
+      "question": "您面色或皮肤偏黄吗？",
+      "relatedConstitutions": ["气虚质", "痰湿质"]
+    },
+    {
+      "id": "q17",
+      "question": "您眼睛干涩吗？",
+      "relatedConstitutions": ["阴虚质"]
+    },
+    {
+      "id": "q18",
+      "question": "您容易口干咽燥吗？",
+      "relatedConstitutions": ["阴虚质", "湿热质"]
+    },
+    {
+      "id": "q19",
+      "question": "您经常感到口苦或口臭吗？",
+      "relatedConstitutions": ["湿热质"]
+    },
+    {
+      "id": "q20",
+      "question": "您腹部肥满松软吗？",
+      "relatedConstitutions": ["痰湿质"]
+    },
+    [
+      {
+        "id": "q21",
+        "question": "您吃（喝）凉的东西会感到不舒服或者容易腹泻吗？",
+        "relatedConstitutions": ["阳虚质"]
+      },
+      {
+        "id": "q22",
+        "question": "您大便不成形吗？（稀或粘滞）",
+        "relatedConstitutions": ["阳虚质", "湿热质"]
+      },
+      {
+        "id": "q23",
+        "question": "您容易感到胸闷或腹胀吗？",
+        "relatedConstitutions": ["痰湿质", "气郁质"]
+      },
+      {
+        "id": "q24",
+        "question": "您的舌苔厚腻或有舌苔发黄现象吗？",
+        "relatedConstitutions": ["湿热质", "痰湿质"]
+      },
+      {
+        "id": "q25",
+        "question": "您面部或鼻部有油脂分泌多的现象吗？",
+        "relatedConstitutions": ["湿热质"]
+      },
+      {
+        "id": "q26",
+        "question": "您有面部色素沉着或容易长斑吗？",
+        "relatedConstitutions": ["血瘀质"]
+      },
+      {
+        "id": "q27",
+        "question": "您皮肤有粗糙、干裂或脱皮现象吗？",
+        "relatedConstitutions": ["阴虚质"]
+      },
+      {
+        "id": "q28",
+        "question": "您容易烦躁或发脾气吗？",
+        "relatedConstitutions": ["气郁质", "湿热质"]
+      },
+      {
+        "id": "q29",
+        "question": "您面色晦暗，或容易出现瘀斑吗？",
+        "relatedConstitutions": ["血瘀质"]
+      },
+      {
+        "id": "q30",
+        "question": "您经常感到身体某部位刺痛或胀痛吗？",
+        "relatedConstitutions": ["血瘀质"]
+      },
+      {
+        "id": "q31",
+        "question": "您平时情绪压抑、忧郁寡欢吗？",
+        "relatedConstitutions": ["气郁质"]
+      },
+      {
+        "id": "q32",
+        "question": "您容易悲伤或感伤、多愁善感吗？",
+        "relatedConstitutions": ["气郁质"]
+      },
+      {
+        "id": "q33",
+        "question": "您的体质与父母、兄弟姐妹或其他亲属相似吗？（如过敏、易胖等）",
+        "relatedConstitutions": ["特禀质"]
+      }
+    ]
+  ]
+]
