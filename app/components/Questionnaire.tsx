@@ -46,13 +46,16 @@ export function Questionnaire() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // 获取问题数据
         const questionsRes = await fetch(`${API_BASE_URL}/api/questions`);
         if (!questionsRes.ok) {
           throw new Error("Failed to fetch questions");
         }
         const questionsData = await questionsRes.json();
+        console.log("获取到的问题数据:", questionsData);
         setQuestions(questionsData);
 
+        // 获取体质数据
         const constitutionsRes = await fetch(
           `${API_BASE_URL}/api/constitution-types`
         );
@@ -60,10 +63,17 @@ export function Questionnaire() {
           throw new Error("Failed to fetch constitution types");
         }
         const constitutionsData = await constitutionsRes.json();
-        setConstitutions(constitutionsData);
+        console.log("获取到的体质数据:", constitutionsData);
 
+        // 确保体质数据不为空
+        if (!constitutionsData || constitutionsData.length === 0) {
+          throw new Error("体质数据为空");
+        }
+
+        setConstitutions(constitutionsData);
         setLoading(false);
       } catch (err) {
+        console.error("获取数据时出错:", err);
         setError(err instanceof Error ? err.message : "An error occurred");
         setLoading(false);
       }
@@ -80,41 +90,64 @@ export function Questionnaire() {
   };
 
   const calculateResult = () => {
+    if (constitutions.length === 0) {
+      console.error("体质数据未加载");
+      setError("体质数据未加载，请刷新页面重试");
+      return;
+    }
+
+    console.log("开始计算结果");
+    console.log("constitutions:", constitutions);
+    console.log("questions:", questions);
+    console.log("answers:", answers);
+
+    // 初始化所有体质的分数
     const constitutionScores: Record<string, { total: number; count: number }> =
       {};
     constitutions.forEach((constitution) => {
-      constitutionScores[constitution.id] = { total: 0, count: 0 };
+      constitutionScores[constitution.name] = { total: 0, count: 0 };
     });
 
+    // 遍历所有答案
     Object.entries(answers).forEach(([questionId, answerValue]) => {
       const question = questions.find((q) => q.id === questionId);
       if (question) {
-        const selectedOption = question.options.find(
-          (opt) => opt.value === answerValue
-        );
-        if (selectedOption) {
-          question.relatedConstitutions.forEach((constitutionId) => {
-            constitutionScores[constitutionId].total += selectedOption.score;
-            constitutionScores[constitutionId].count += 1;
+        const score = parseInt(answerValue);
+        if (!isNaN(score)) {
+          // 遍历该问题相关的所有体质
+          question.relatedConstitutions.forEach((constitutionName) => {
+            if (constitutionScores[constitutionName]) {
+              constitutionScores[constitutionName].total += score;
+              constitutionScores[constitutionName].count += 1;
+            } else {
+              console.warn(`未找到体质: ${constitutionName}`);
+            }
+          });
+        }
+      } else {
+        console.warn(`未找到问题: ${questionId}`);
+      }
+    });
+
+    console.log("计算后的 constitutionScores:", constitutionScores);
+
+    // 计算最终分数
+    const finalScores: ConstitutionScore[] = [];
+    Object.entries(constitutionScores).forEach(([name, { total, count }]) => {
+      if (count > 0) {
+        const constitution = constitutions.find((c) => c.name === name);
+        if (constitution) {
+          const averageScore = (total / count) * 20;
+          finalScores.push({
+            id: constitution.id,
+            name: constitution.name,
+            score: Math.round(averageScore * 10) / 10,
           });
         }
       }
     });
 
-    const finalScores: ConstitutionScore[] = Object.entries(constitutionScores)
-      .map(([id, { total, count }]) => {
-        const constitution = constitutions.find((c) => c.id === id);
-        if (!constitution) return null;
-
-        const averageScore = count > 0 ? (total / count) * 20 : 0;
-        return {
-          id,
-          name: constitution.name,
-          score: Math.round(averageScore * 10) / 10,
-        };
-      })
-      .filter((score): score is ConstitutionScore => score !== null);
-
+    console.log("最终结果:", finalScores);
     setResult(finalScores);
   };
 
@@ -177,35 +210,65 @@ export function Questionnaire() {
             ))}
           </div>
         ) : (
-          <div className="rounded-lg shadow-md ">
+          <div className="rounded-lg shadow-md p-6">
             <h2 className="text-2xl font-bold text-center mb-6">测评结果</h2>
-            <div className="space-y-4">
-              {result.map((score) => (
-                <div key={score.id} className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium">{score.name}</span>
-                    <span
-                      className={`font-semibold ${
-                        score.score >= 40
-                          ? "text-red-600 dark:text-red-400"
-                          : "text-gray-600 dark:text-gray-400"
-                      }`}
-                    >
-                      {score.score}分
-                    </span>
+            <div className="space-y-6">
+              {result.map((score) => {
+                const constitution = constitutions.find(
+                  (c) => c.id === score.id
+                );
+                return (
+                  <div
+                    key={score.id}
+                    className="space-y-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow"
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-lg">{score.name}</span>
+                      <span
+                        className={`font-semibold text-xl ${
+                          score.score >= 40
+                            ? "text-red-600 dark:text-red-400"
+                            : "text-gray-600 dark:text-gray-400"
+                        }`}
+                      >
+                        {score.score}分
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full transition-all duration-500 ${
+                          score.score >= 40
+                            ? "bg-red-500"
+                            : "bg-blue-500 dark:bg-blue-400"
+                        }`}
+                        style={{ width: `${Math.min(score.score, 100)}%` }}
+                      ></div>
+                    </div>
+                    {constitution && (
+                      <div className="mt-4 space-y-2">
+                        <div className="text-sm text-gray-600 dark:text-gray-300">
+                          <span className="font-medium">特征描述：</span>
+                          {constitution.description}
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-300">
+                          <span className="font-medium">调理建议：</span>
+                          {constitution.recommendation}
+                        </div>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {constitution.tags.map((tag, index) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-full"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full transition-all duration-500 ${
-                        score.score >= 40
-                          ? "bg-red-500"
-                          : "bg-blue-500 dark:bg-blue-400"
-                      }`}
-                      style={{ width: `${Math.min(score.score, 100)}%` }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
               <div className="mt-6 p-4 bg-blue-50 dark:bg-gray-700 rounded-lg">
                 <h3 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">
                   体质判定
@@ -213,8 +276,10 @@ export function Questionnaire() {
                 <p className="text-gray-700 dark:text-gray-300">
                   {(() => {
                     const pingheScore =
-                      result.find((s) => s.id === "pinghe")?.score ?? 0;
-                    const otherScores = result.filter((s) => s.id !== "pinghe");
+                      result.find((s) => s.name === "平和质")?.score ?? 0;
+                    const otherScores = result.filter(
+                      (s) => s.name !== "平和质"
+                    );
                     const highScores = otherScores.filter((s) => s.score >= 40);
 
                     if (
